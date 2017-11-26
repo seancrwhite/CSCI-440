@@ -15,6 +15,7 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import normalize
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import LinearSVC
 from sklearn.neural_network import MLPClassifier
@@ -61,11 +62,25 @@ def make_dataset(question, data):
     elif question == 2:
         X = np.array(data)
     elif question == 3:
-        X = np.array(data)
+        X = np.array(normalize(data)) #Normalize data and store in a numpy array (matrix)
+
         pca = PCA(n_components=2)
-        X_r = pca.fit(X).transform(X)
+        X_r = pca.fit(X).transform(X) #Perform PCA on data matrix and store result
+
+        components = [pca.components_[0], pca.components_[1]] #get principal components
+        print(pca.explained_variance_ratio_) #Print eigenvals to show variance of each column
+
         for x in X_r:
-            plt.scatter(x[0], x[1])
+            plt.scatter(components[0][0]*x[0],
+                components[0][1]*x[0], color="r")
+            plt.scatter(components[1][0]*x[1],
+                components[1][1]*x[1], color="b")
+
+        plt.show()
+
+        for x in X_r:
+            plt.scatter(x[0], x[1], color="g")
+
         plt.show()
     elif question == 4:
         X = np.array(data)
