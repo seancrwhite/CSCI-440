@@ -7,6 +7,7 @@ import re
 import sklearn
 import codecs
 import numpy as np
+import matplotlib.pyplot as plt
 import mysql.connector as dbc
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import KNeighborsClassifier
@@ -36,7 +37,8 @@ def load_data(question, cursor):
                  "FROM IMDB.EARNINGS NATURAL JOIN IMDB.SHOW NATURAL JOIN "
                  "IMDB.WORKED_ON NATURAL JOIN IMDB.PERSON")
     elif question == 3:
-        query = ("SELECT * FROM IMDB.SHOW")
+        query = ("select Duration, Aspect_Ratio, Release_Year, Budget, Gross_Revanue, Avg_Rating, Votes, IMDB_Score "
+                 "from IMDB.SHOW natural join IMDB.EARNINGS natural join IMDB.SCORE where Duration is not null")
     elif question == 4:
         query = ("SELECT Show_Id, Title, Genre, IMDB_Score "
                  "FROM IMDB.SHOW NATURAL JOIN IMDB.GENRE NATURAL JOIN IMDB.SCORE")
@@ -51,18 +53,26 @@ def load_data(question, cursor):
     return data
 
 #generate features and labels
-def make_dataset(data):
-    labels = []; #initialize a labels list
+def make_dataset(question, data):
     features = []
-    count = countVectorizer() # QUESTION What is this?
-    data = []
-    #optional cleaning of words - we may want to omit for simplicity
-    stop = stopwords.words('english')
-    porter = PorterStemmer()
-    #do stopping and stemming
-    bag = count.fit_transofrm(data) #generates bag of words
-    features = bag
-    return features, labels
+
+    if question == 1:
+        X = np.array(data)
+    elif question == 2:
+        X = np.array(data)
+    elif question == 3:
+        X = np.array(data)
+        pca = PCA(n_components=2)
+        X_r = pca.fit(X).transform(X)
+        for x in X_r:
+            plt.scatter(x[0], x[1])
+        plt.show()
+    elif question == 4:
+        X = np.array(data)
+    elif question == 5:
+        X = np.array(data)
+
+    return features
 
 #analyze and return auc
 def cross_validation(name, features, labels, num_folds):
@@ -97,10 +107,10 @@ if __name__ == "__main__":
     cursor = db.cursor()
 
     data = load_data(question, cursor)
-    features, labels = make_dataset(data)
-    auroc = cross_validation(name, features, labels, num_folds)
+    features = make_dataset(question, data)
+    #auroc = cross_validation(name, features, labels, num_folds)
 
     print("question: ", question)
     print("classifier: ", name)
     print("number of folds: ", num_folds)
-    print("AUROC: ", auroc)
+    #print("AUROC: ", auroc)
