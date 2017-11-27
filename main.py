@@ -7,8 +7,10 @@ import re
 import sklearn
 import codecs
 import numpy as np
+import heapq
 import matplotlib.pyplot as plt
 import mysql.connector as dbc
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import KNeighborsClassifier
 from nltk.corpus import stopwords
@@ -30,9 +32,9 @@ def load_data(question, cursor):
     query = "" # default empty query
 
     if question == 1:
-        query = ("SELECT Show_Id, Title, Budget, Gross_Revanue, IMDB_Score "
+        query = ("SELECT Gross_Revanue, Budget, Duration, Aspect_Ratio, Release_Year, Votes, IMDB_Score "
                  "FROM IMDB.EARNINGS NATURAL JOIN IMDB.SHOW NATURAL JOIN IMDB.SCORE "
-                 "WHERE Gross_Revanue > 999999")
+                 "WHERE Gross_Revanue > 999999 AND Duration IS NOT NULL")
     elif question == 2:
         query = ("SELECT Show_Id, Title, Gross_Revanue, Name, Role "
                  "FROM IMDB.EARNINGS NATURAL JOIN IMDB.SHOW NATURAL JOIN "
@@ -58,7 +60,25 @@ def make_dataset(question, data):
     features = []
 
     if question == 1:
-        X = np.array(data)
+        model = ExtraTreesClassifier()
+
+        #importance relative to gross revenue
+        X = np.array([row[1:] for row in data])
+        Y = [row[0] for row in data]
+
+        model.fit(X,Y)
+        importances = model.feature_importances_
+
+        print(importances)
+
+        #importances relative to score
+        X = np.array([row[:6] for row in data])
+        Y = [row[6] for row in data]
+
+        model.fit(X,Y)
+        importances = model.feature_importances_
+
+        print(importances)
     elif question == 2:
         X = np.array(data)
     elif question == 3:
@@ -111,8 +131,8 @@ def cross_validation(name, features, labels, num_folds):
 
 if __name__ == "__main__":
     question = int(sys.argv[1]) #e.g. 1
-    name = sys.argv[2] #e.g. knn
-    num_folds = int(sys.argv[3]) #e.g. 5
+    # name = sys.argv[2] #e.g. knn
+    # num_folds = int(sys.argv[3]) #e.g. 5
 
     # Initialize connection to database
     db = dbc.connect(port = 3306,
@@ -123,9 +143,3 @@ if __name__ == "__main__":
 
     data = load_data(question, cursor)
     features = make_dataset(question, data)
-    #auroc = cross_validation(name, features, labels, num_folds)
-
-    print("question: ", question)
-    print("classifier: ", name)
-    print("number of folds: ", num_folds)
-    #print("AUROC: ", auroc)
