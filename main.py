@@ -7,6 +7,7 @@ import re
 import sklearn
 import codecs
 import numpy as np
+import operator
 import heapq
 import matplotlib.pyplot as plt
 import mysql.connector as dbc
@@ -61,6 +62,7 @@ def make_dataset(question, data):
 
     if question == 1:
         model = ExtraTreesClassifier()
+        labels = ["Gross_Revanue", "Budget", "Duration", "Aspect_Ratio", "Release_Year", "Votes", "IMDB_Score"]
 
         #importance relative to gross revenue
         X = np.array([row[1:] for row in data])
@@ -69,7 +71,11 @@ def make_dataset(question, data):
         model.fit(X,Y)
         importances = model.feature_importances_
 
-        print(importances)
+        result = dict(zip(labels[1:], importances))
+
+        print("For gross revenue")
+        for label,value in sorted(result.items(), key=operator.itemgetter(1)):
+            print(label, value)
 
         #importances relative to score
         X = np.array([row[:6] for row in data])
@@ -78,7 +84,11 @@ def make_dataset(question, data):
         model.fit(X,Y)
         importances = model.feature_importances_
 
-        print(importances)
+        result = dict(zip(labels[:6], importances))
+
+        print("\nFor IMDB score")
+        for label,value in sorted(result.items(), key=operator.itemgetter(1)):
+            print(label, value)
     elif question == 2:
         X = np.array(data)
     elif question == 3:
