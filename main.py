@@ -1,32 +1,16 @@
 #authors: Tia Smith, Sean White
 #description: Find answers to questions about films by querying IMDb database and performing analysis and visualization using machine learning techniques
 
-import csv
 import sys
-import re
-import sklearn
-import codecs
 import numpy as np
 import operator
 import heapq
 import matplotlib.pyplot as plt
 import mysql.connector as dbc
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.neighbors import KNeighborsClassifier
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
-from sklearn.model_selection import cross_val_score
-from sklearn.naive_bayes import GaussianNB
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import normalize
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import LinearSVC
-from sklearn.neural_network import MLPClassifier
 from sklearn.decomposition import PCA
-
-# remove special characters from text
-def remove_text(text):
-    return re.sub('-','',text)
 
 # query database and load data into dictionary
 def load_data(question, cursor):
@@ -44,8 +28,9 @@ def load_data(question, cursor):
         query = ("select Duration, Aspect_Ratio, Release_Year, Budget, Gross_Revanue, Avg_Rating, Votes, IMDB_Score "
                  "from IMDB.SHOW natural join IMDB.EARNINGS natural join IMDB.SCORE where Duration is not null")
     elif question == 4:
-        query = ("SELECT Show_Id, Title, Genre, IMDB_Score "
-                 "FROM IMDB.SHOW NATURAL JOIN IMDB.GENRE NATURAL JOIN IMDB.SCORE")
+        query = ("SELECT Title, Description, Genre "
+                 "FROM IMDB.SHOW NATURAL JOIN IMDB.GENRE "
+                 "WHERE Description IS NOT NULL")
     elif question == 5:
         query = ("SELECT Show_Id, Title, Release_Year, Gross_Revanue, Genre, IMDB_Score, Name "
                  "FROM IMDB.SHOW NATURAL JOIN IMDB.EARNINGS NATURAL JOIN IMDB.GENRE NATURAL JOIN "
@@ -58,8 +43,6 @@ def load_data(question, cursor):
 
 #generate features and labels
 def make_dataset(question, data):
-    features = []
-
     if question == 1:
         model = ExtraTreesClassifier()
         labels = ["Gross_Revanue", "Budget", "Duration", "Aspect_Ratio", "Release_Year", "Votes", "IMDB_Score"]
@@ -71,11 +54,15 @@ def make_dataset(question, data):
         model.fit(X,Y)
         importances = model.feature_importances_
 
-        result = dict(zip(labels[1:], importances))
+        y_pos = np.arange(len(labels[1:]))
 
-        print("For gross revenue")
-        for label,value in sorted(result.items(), key=operator.itemgetter(1)):
-            print(label, value)
+        #Create bar chart
+        plt.bar(y_pos, importances)
+        plt.xticks(y_pos, labels[1:])
+        plt.ylabel('Importance')
+        plt.title('Feature Importance Relative to Gross Revenue')
+
+        plt.show()
 
         #importances relative to score
         X = np.array([row[:6] for row in data])
@@ -84,13 +71,20 @@ def make_dataset(question, data):
         model.fit(X,Y)
         importances = model.feature_importances_
 
-        result = dict(zip(labels[:6], importances))
+        y_pos = np.arange(len(labels[:6]))
 
-        print("\nFor IMDB score")
-        for label,value in sorted(result.items(), key=operator.itemgetter(1)):
-            print(label, value)
+        #Create bar chart
+        plt.bar(y_pos, importances)
+        plt.xticks(y_pos, labels[:6])
+        plt.ylabel('Importance')
+        plt.title('Feature Importance Relative to IMDB Score')
+
+        plt.show()
     elif question == 2:
         X = np.array(data)
+        actor_d = []
+        #add each uniqe actor to actor_d
+        #for each occurence update count, add
     elif question == 3:
         X = np.array(normalize(data)) #Normalize data and store in a numpy array (matrix)
 
@@ -114,30 +108,37 @@ def make_dataset(question, data):
         plt.show()
     elif question == 4:
         X = np.array(data)
+
+        #Perform bag of words on the data
+        count_vect = CountVectorizer(stop_words='english')
+
+        X_t = count_vect.fit_transform([row[0] for row in X])
+        freqs_t = sorted([(word, X_t.getcol(idx).sum()) for word, idx
+            in count_vect.vocabulary_.items()], key = lambda x: -x[1])[:10]
+
+        X_d = count_vect.fit_transform([row[1] for row in X])
+        freqs_d = sorted([(word, X_d.getcol(idx).sum()) for word, idx
+            in count_vect.vocabulary_.items()], key = lambda x: -x[1])[:10]
+
+        #Visualize
+        y_pos = range(len(freqs_t))
+
+        plt.bar(y_pos, [val[1] for val in freqs_t], color='#226764')
+        plt.xticks(y_pos, [val[0] for val in freqs_t])
+
+        plt.show()
+
+        plt.bar(y_pos, [val[1] for val in freqs_d], color='#AA6B39')
+        plt.xticks(y_pos, [val[0] for val in freqs_d])
+
+        plt.show()
     elif question == 5:
         X = np.array(data)
-
-    return features
-
-#analyze and return auc
-def cross_validation(name, features, labels, num_folds):
-    if name.lower() == 'knn':
-        data = cross_val_score(KNeighborsClassifier(),
-            features, labels, cv=num_folds, scoring='roc_auc')
-    elif name.lower() == 'gnb':
-        data = cross_val_score(GaussianNB(), features.toarray(),
-            labels, cv=num_folds, scoring='roc_auc')
-    elif name.lower() == 'tree':
-        data = cross_val_score(DecisionTreeClassifier(), features.toarray(),
-            labels, cv=num_folds, scoring='roc_auc')
-    elif name.lower() == 'svc':
-        data = cross_val_score(LinearSVC(), features.toarray(),
-            labels, cv=num_folds, scoring='roc_auc')
-    elif name.lower() == 'mlp':
-        data = cross_val_score(MLPClassifier(), features.toarray(),
-            labels, cv=num_folds, scoring='roc_auc')
-    auc = np.mean(data)
-    return auc
+        # get actor data
+        # calulate death age
+        # get avg score, total revenue, amount of movies, total num votes
+        # do multiple regression for death age
+        # scatter plot of big name actors and when they will die
 
 if __name__ == "__main__":
     question = int(sys.argv[1]) #e.g. 1
@@ -152,4 +153,4 @@ if __name__ == "__main__":
     cursor = db.cursor()
 
     data = load_data(question, cursor)
-    features = make_dataset(question, data)
+    make_dataset(question, data)
