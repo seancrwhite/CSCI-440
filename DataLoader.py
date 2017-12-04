@@ -17,9 +17,8 @@ class DataLoader:
                      "FROM IMDB.EARNINGS NATURAL JOIN IMDB.SHOW NATURAL JOIN IMDB.SCORE "
                      "WHERE Gross_Revanue > 999999 AND Duration IS NOT NULL")
         elif question == 2:
-            query = ("SELECT Show_Id, Title, Gross_Revanue, Name, Role "
-                     "FROM IMDB.EARNINGS NATURAL JOIN IMDB.SHOW NATURAL JOIN "
-                     "IMDB.WORKED_ON NATURAL JOIN IMDB.PERSON")
+            query = ("SELECT Title, Name FROM IMDB.SHOW NATURAL JOIN IMDB.EARNINGS  "
+                     "NATURAL JOIN IMDB.WORKED_ON NATURAL JOIN IMDB.PERSON LIMIT 500")
         elif question == 3:
             query = ("SELECT Duration, Aspect_Ratio, Release_Year, Budget, Gross_Revanue, Avg_Rating, Votes, IMDB_Score "
                      "FROM IMDB.SHOW NATURAL JOIN IMDB.EARNINGS NATURAL JOIN IMDB.SCORE WHERE Duration IS NOT NULL")

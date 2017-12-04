@@ -11,16 +11,33 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge, Lasso, ElasticNet, BayesianRidge
 
 class Modeler:
+    def create_graph(self, data):
+        curr_title = data[0][0]
+        curr_cast = []
+        relationship_dict = {}
+
+        for row in data:
+            if curr_title == row[0]:
+                curr_cast.append(row[1])
+            else:
+                for actor in curr_cast:
+                    if actor not in relationship_dict.keys():
+                        relationship_dict.update({actor: []})
+
+                    actor_relationships = relationship_dict[actor]
+
+                    for coworker in curr_cast:
+                        if coworker != actor and coworker not in actor_relationships:
+                            actor_relationships.append(coworker)
+
+                    relationship_dict.update({actor: actor_relationships})
+
+                curr_cast = [row[1]]
+                curr_title = row[0]
+
+        return relationship_dict
+
     # Find important features in data using forests of trees
-    def format_relationships(self, data):
-        print("Not implemented")
-
-    def create_vertices(self, data):
-        print("Not implemented")
-
-    def create_edges(self, data):
-        print("Not implemented")
-        
     def extract_feature_importance(self, data, targets):
         model = ExtraTreesClassifier()
         X = normalize(data)
@@ -79,26 +96,30 @@ class Modeler:
     def eval_regression_models(self, X, y):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
+        scores = []
+
         linear_regression = LinearRegression()
         linear_regression.fit(X_train, y_train)
-        print('Linear Regression: {}'.format(linear_regression.score(X_test, y_test)))
+        scores.append('Linear Regression: {}'.format(linear_regression.score(X_test, y_test)))
 
         logistic_regression = LogisticRegression()
         logistic_regression.fit(X_train, y_train)
-        print('Logistic Regression: {}'.format(logistic_regression.score(X_test, y_test)))
+        scores.append('Logistic Regression: {}'.format(logistic_regression.score(X_test, y_test)))
 
         ridge = Ridge()
         ridge.fit(X_train, y_train)
-        print('Ridge: {}'.format(ridge.score(X_test, y_test)))
+        scores.append('Ridge: {}'.format(ridge.score(X_test, y_test)))
 
         lasso = Lasso()
         lasso.fit(X_train, y_train)
-        print('Lasso: {}'.format(lasso.score(X_test, y_test)))
+        scores.append('Lasso: {}'.format(lasso.score(X_test, y_test)))
 
         elastic_net = ElasticNet()
         elastic_net.fit(X_train, y_train)
-        print('Elastic Net: {}'.format(elastic_net.score(X_test, y_test)))
+        scores.append('Elastic Net: {}'.format(elastic_net.score(X_test, y_test)))
 
         bayes = BayesianRidge()
         bayes.fit(X_train, y_train)
-        print('Bayesian: {}'.format(bayes.score(X_test, y_test)))
+        scores.append('Bayesian: {}'.format(bayes.score(X_test, y_test)))
+
+        return scores
