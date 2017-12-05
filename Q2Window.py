@@ -10,16 +10,18 @@ import networkx as nx
 
 class Q2Window:
     def __init__(self):
-        self.initUI()
+        self.initUI() # Initialize window on startup
 
+    # Create application window
     def initUI(self):
         self.w = QWidget()
         self.w.resize(600, 300)
         self.w.move(350, 350)
         self.w.setWindowTitle('Question 2')
 
+        # Required objects for drawing results
         loader = DataLoader()
-        data = loader.fetch_data(2)
+        data = loader.fetch_data(2) # Get data
         modeler = Modeler()
 
         relationship_dict = modeler.create_graph(data)

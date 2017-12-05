@@ -8,35 +8,42 @@ from Modeler import Modeler
 
 class Q1Window:
     def __init__(self):
-        self.initUI()
+        self.initUI() # Initialize window on startup
 
+    # Create application window
     def initUI(self):
         self.w = QWidget()
         self.w.resize(600, 300)
         self.w.move(350, 350)
         self.w.setWindowTitle('Question 1')
 
+        # Required objects for drawing results
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.canvas.axes = self.figure.add_subplot(111)
 
         loader = DataLoader()
-        data = loader.fetch_data(1)
+        data = loader.fetch_data(1) # Get data
 
+        # Initialize buttons
         btn_f1 = QPushButton('Fig 1: Revenue', self.w)
         btn_f2 = QPushButton('Fig 2: Score', self.w)
 
+        # Place them on screen
         btn_f1.move(5, 5)
         btn_f2.move(125, 5)
 
+        # Add functionality
         btn_f1.clicked.connect(self.on_click_F1)
         btn_f2.clicked.connect(self.on_click_F2)
 
+        # Transform data
         self.importances_r = self.get_revenue_importances(data)
         self.importances_s = self.get_score_importances(data)
 
         self.w.show()
 
+    # Display figure 1 on button click
     def on_click_F1(self):
         self.canvas.axes.clear()
 
@@ -56,9 +63,10 @@ class Q1Window:
         self.canvas.draw()
         self.canvas.show()
 
+    # Display figure 2 on button click
     def on_click_F2(self):
         self.canvas.axes.clear()
-        
+
         labels = ["Gross Revenue", "Budget", "Duration",
             "Aspect Ratio", "Release Year", "Votes"]
         x_pos = np.arange(len(self.importances_s))
@@ -75,20 +83,22 @@ class Q1Window:
         self.canvas.draw()
         self.canvas.show()
 
-    #importance relative to gross revenue
+    # Get importance relative to gross revenue
     def get_revenue_importances(self, data):
         modeler = Modeler()
 
+        # Seperate data from target
         X = np.array([row[1:] for row in data])
         Y = [row[0] for row in data]
 
         importances = modeler.extract_feature_importance(X, Y)
         return importances
 
-    #importance relative to score
+    # Get importance relative to score
     def get_score_importances(self, data):
         modeler = Modeler()
 
+        # Seperate data from target
         X = np.array([row[:6] for row in data])
         Y = [row[6] for row in data]
 

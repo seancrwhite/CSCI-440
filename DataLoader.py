@@ -2,6 +2,7 @@ import mysql.connector as dbc
 
 class DataLoader:
     def __init__(self):
+        #initialize connection with database
         self.db = dbc.connect(port = 3306,
                          user = "root",
                          passwd = "password",
@@ -33,5 +34,5 @@ class DataLoader:
                      "WHERE Gross_Revanue > 0 AND Role='Actor' AND Birth_Year > 0")
 
         self.cursor.execute(query)
-        data = self.cursor.fetchall()
+        data = self.cursor.fetchall() # Extract all results from executed query
         return data

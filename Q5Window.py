@@ -8,30 +8,36 @@ from Modeler import Modeler
 
 class Q5Window:
     def __init__(self):
-        self.initUI()
+        self.initUI() # Initialize window on startup
 
+    # Create application window
     def initUI(self):
         self.w = QWidget()
         self.w.resize(600, 300)
         self.w.move(350, 350)
         self.w.setWindowTitle('Question 5')
 
+        # Required objects for drawing results
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.canvas.axes = self.figure.add_subplot(111)
 
         loader = DataLoader()
-        data = loader.fetch_data(5)
+        data = loader.fetch_data(5) # Get data
         modeler = Modeler()
 
+        # Seperate living and dead actors
         actors_l, actors_d = modeler.seperate_actors(data)
 
+        # Dead actors will be used as training data
         vals_d = np.array(list(actors_d.values()))
         X_d = vals_d[:,:2]
         y_d = vals_d[:,2]
 
+        # Train models and get accuracy scores
         scores = modeler.eval_regression_models(X_d, y_d)
 
+        # Plot our failure for all to see
         l1 = QLabel()
         l2 = QLabel()
         l3 = QLabel()

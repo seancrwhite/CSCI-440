@@ -6,6 +6,7 @@ from DataLoader import DataLoader
 from MainWindow import MainWindow
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 
+# Starting point for app, simply starts the main window
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()
